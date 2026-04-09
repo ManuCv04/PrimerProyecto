@@ -45,11 +45,20 @@ class ConsoleUI:
         text = self.entry.get()
         if text:
             self.chat.insert(tk.END, f"Tú: {text}\n")
+            self.chat.see(tk.END)
             self.entry.delete(0, tk.END)
             self.event_bus.publish("voice_input", text)
 
     def display(self, text):
+        self.chat.insert(tk.END, "\n" + "="*50 + "\n")
+        self.chat.insert(tk.END, "Respuesta de IA:\n\n")
+        self.chat.insert(tk.END, text + "\n")
+        self.chat.insert(tk.END, "="*50 + "\n")
+        self.chat.see(tk.END)
+    
+    def _safe_display(self, text):
         self.chat.insert(tk.END, f"IA: {text}\n")
+        self.chat.see(tk.END)
 
     def update_camera(self):
         ret, frame = self.cap.read()

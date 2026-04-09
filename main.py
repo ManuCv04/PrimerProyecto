@@ -27,11 +27,17 @@ class MedicalAssistantApp:
         self.event_bus.subscribe("voice_input", self.handle_input)
 
     def handle_input(self, text):
+        
+        threading.Thread(target=self.process_ai, args=(text,), daemon=True).start()
+
+    def process_ai(self, text):
         result = self.ai.analyze(text)
-        response = f"Posible: {result['diagnosis']} | Recomendación: {result['recommendation']}"
-        self.ui.display(response)
-        self.voice.speak(response)  
-        self.network.broadcast(response)
+        response = result["diagnosis"]
+        self.ui.display(response) 
+        import pyttsx3
+        engine = pyttsx3.init()
+        engine.say(response)
+        engine.runAndWait()
 
     def run(self):
         threading.Thread(target=self.voice.listen, daemon=True).start()
