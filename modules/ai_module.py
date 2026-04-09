@@ -1,43 +1,32 @@
 import requests
 
 class AIModule:
-    def __init__(self, db):
+    def __init__(self, db=None):
         self.db = db
-        self.url = "http://localhost:11434/api/generate"
 
     def analyze(self, text):
-        prompt = f"""
-Eres un asistente médico.
+        try:
+            response = requests.post(
+                "http://localhost:11434/api/generate",
+                json={
+                    "model": "llama3",  # 🔥 puedes cambiar a "llama3" si quieres
+                    "prompt": f"Eres un asistente médico. Responde claro y breve:\n{text}",
+                    "stream": False
+                }
+            )
 
-Analiza el siguiente síntoma del paciente:
+            result = response.json()
+            print("DEBUG OLLAMA:", result)  # 👈 IMPORTANTE PARA DEBUG
 
-"{text}"
+            # ✅ Manejo seguro de respuesta
+            answer = result.get("response", str(result))
 
-Responde en este formato EXACTO:
+            return {
+                "diagnosis": answer
+            }
 
-Diagnóstico posible:
-(una explicación clara)
-
-Nivel:
-(Leve, Moderado o Grave)
-
-Recomendaciones:
-- tratamiento 1
-- tratamiento 2
-- tratamiento 3
-
-Si es grave, indica acudir a emergencias.
-"""
-
-        response = requests.post(self.url, json={
-            "model": "llama3",
-            "prompt": prompt,
-            "stream": False
-        })
-
-        data = response.json()
-
-        return {
-            "diagnosis": data["response"],
-            "recommendation": []
-        }
+        except Exception as e:
+            print("Error con Ollama:", e)
+            return {
+                "diagnosis": "No pude procesar la solicitud."
+            }
