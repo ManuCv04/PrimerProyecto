@@ -1,32 +1,43 @@
-import requests
-
 class AIModule:
-    def __init__(self, db=None):
+    def __init__(self, db, knowledge):
         self.db = db
+        self.knowledge = knowledge
 
     def analyze(self, text):
+        # 🔥 PROMPT MÉDICO CONTROLADO
+        prompt = f"""
+Eres un asistente médico profesional.
+
+Responde SOLO usando la siguiente base de conocimiento.
+Si la respuesta no está en la información, responde:
+"No tengo suficiente información médica para responder con precisión."
+
+BASE DE CONOCIMIENTO:
+{self.knowledge}
+
+PREGUNTA:
+{text}
+"""
+
+        # 🔥 AQUÍ LLAMAS A OLLAMA (o tu modelo)
+        import requests
+
         try:
             response = requests.post(
                 "http://localhost:11434/api/generate",
                 json={
-                    "model": "llama3",  # 🔥 puedes cambiar a "llama3" si quieres
-                    "prompt": f"Eres un asistente médico. Responde claro y breve:\n{text}",
+                    "model": "llama3",
+                    "prompt": prompt,
                     "stream": False
                 }
             )
 
             result = response.json()
-            print("DEBUG OLLAMA:", result)  # 👈 IMPORTANTE PARA DEBUG
-
-            # ✅ Manejo seguro de respuesta
-            answer = result.get("response", str(result))
-
-            return {
-                "diagnosis": answer
-            }
+            answer = result.get("response", "No se pudo generar respuesta.")
 
         except Exception as e:
-            print("Error con Ollama:", e)
-            return {
-                "diagnosis": "No pude procesar la solicitud."
-            }
+            answer = f"Error conectando con IA: {e}"
+
+        return {
+            "diagnosis": answer
+        }
